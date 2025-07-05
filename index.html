@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>Untitled</title>
+  
+
+</head>
+<body>
+<!-- partial:index.partial.html -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Card - Perkalian 3</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One:wght@400&family=Nunito:wght@400;600;700&display=swap');
+        
+        .card-flip {
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+        }
+        
+        .card-flip.flipped {
+            transform: rotateY(180deg);
+        }
+        
+        .card-front, .card-back {
+            backface-visibility: hidden;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .card-back {
+            transform: rotateY(180deg);
+        }
+        
+        .bounce {
+            animation: bounce 0.5s ease-in-out;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 60%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            80% { transform: translateY(-5px); }
+        }
+        
+        .shake {
+            animation: shake 0.5s ease-in-out;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        .pulse-success {
+            animation: pulse-success 0.6s ease-in-out;
+        }
+        
+        @keyframes pulse-success {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-400 via-pink-400 to-blue-400 min-h-screen font-['Nunito']">
+    <div class="container mx-auto px-4 py-6">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <div class="flex justify-center mb-4">
+                <img src="https://raw.githubusercontent.com/mathnology/Penelitian-Relevan/refs/heads/main/gif%20mathnology.gif" 
+                     alt="Mathnology Mascot" 
+                     class="w-28 h-28 md:w-32 md:h-32 rounded-full shadow-lg border-4 border-white/30 bg-white/20 backdrop-blur-sm object-cover">
+            </div>
+            <h1 class="text-4xl md:text-5xl font-['Fredoka_One'] text-white mb-2 drop-shadow-lg">
+                🧠 Memory Card Perkalian 3 ✨
+            </h1>
+            <p class="text-white text-lg font-semibold">Cocokkan soal dengan jawabannya!</p>
+        </div>
+        
+        <!-- Game Stats -->
+        <div class="flex justify-center gap-6 mb-6">
+            <div class="bg-white/20 backdrop-blur-sm rounded-2xl px-6 py-3 text-white text-center">
+                <div class="text-2xl font-bold" id="score">0</div>
+                <div class="text-sm">Skor</div>
+            </div>
+            <div class="bg-white/20 backdrop-blur-sm rounded-2xl px-6 py-3 text-white text-center">
+                <div class="text-2xl font-bold" id="moves">0</div>
+                <div class="text-sm">Langkah</div>
+            </div>
+            <div class="bg-white/20 backdrop-blur-sm rounded-2xl px-6 py-3 text-white text-center">
+                <div class="text-2xl font-bold" id="pairs">0/10</div>
+                <div class="text-sm">Pasangan</div>
+            </div>
+        </div>
+        
+        <!-- Game Board -->
+        <div class="max-w-4xl mx-auto">
+            <div class="grid grid-cols-4 md:grid-cols-5 gap-3 md:gap-4" id="gameBoard">
+                <!-- Cards will be generated here -->
+            </div>
+        </div>
+        
+        <!-- Reset Button -->
+        <div class="text-center mt-8">
+            <button onclick="resetGame()" class="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg transform hover:scale-105 transition-all duration-200">
+                🔄 Main Lagi
+            </button>
+        </div>
+        
+        <!-- Footer -->
+        <div class="text-center mt-12 mb-4">
+            <div class="bg-white/10 backdrop-blur-sm rounded-2xl px-6 py-4 inline-block">
+                <p class="text-white font-semibold text-lg">
+                    © 2025 Mathnology
+                </p>
+                <p class="text-white/80 text-sm mt-1">
+                    Belajar Matematika Jadi Menyenangkan! ✨
+                </p>
+            </div>
+        </div>
+        
+        <!-- Success Modal -->
+        <div id="successModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+            <div class="bg-white rounded-3xl p-8 text-center max-w-md mx-4 transform scale-95 transition-transform duration-300">
+                <div class="text-6xl mb-4">🎉</div>
+                <h2 class="text-3xl font-['Fredoka_One'] text-purple-600 mb-4">Selamat!</h2>
+                <p class="text-gray-700 mb-2">Kamu berhasil mencocokkan semua kartu!</p>
+                <p class="text-lg font-semibold text-purple-600 mb-6">Skor: <span id="finalScore">0</span></p>
+                <button onclick="resetGame()" class="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-3 px-6 rounded-full">
+                    Main Lagi 🚀
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let cards = [];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let moves = 0;
+        let score = 0;
+        let isProcessing = false;
+
+        // Generate card data (questions and answers for multiplication table of 3)
+        function generateCards() {
+            const cardData = [];
+            
+            // Create question and answer pairs
+            for (let i = 1; i <= 10; i++) {
+                cardData.push({
+                    id: `q${i}`,
+                    type: 'question',
+                    content: `3 × ${i}`,
+                    value: i,
+                    color: 'from-blue-400 to-blue-600'
+                });
+                
+                cardData.push({
+                    id: `a${i}`,
+                    type: 'answer',
+                    content: `${3 * i}`,
+                    value: i,
+                    color: 'from-green-400 to-green-600'
+                });
+            }
+            
+            // Shuffle the cards
+            return cardData.sort(() => Math.random() - 0.5);
+        }
+
+        // Create card HTML
+        function createCardHTML(card, index) {
+            return `
+                <div class="card-container relative h-24 md:h-28 cursor-pointer" onclick="flipCard(${index})">
+                    <div class="card-flip w-full h-full relative" id="card-${index}">
+                        <!-- Card Back (Hidden) -->
+                        <div class="card-back bg-gradient-to-br ${card.color} rounded-xl shadow-lg flex items-center justify-center border-2 border-white/30">
+                            <div class="text-white font-bold text-lg md:text-xl text-center px-2">
+                                ${card.content}
+                            </div>
+                        </div>
+                        <!-- Card Front (Visible) -->
+                        <div class="card-front bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg flex items-center justify-center border-2 border-white/30">
+                            <div class="text-4xl">🎯</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Initialize game
+        function initGame() {
+            cards = generateCards();
+            const gameBoard = document.getElementById('gameBoard');
+            gameBoard.innerHTML = cards.map((card, index) => createCardHTML(card, index)).join('');
+            
+            // Reset game state
+            flippedCards = [];
+            matchedPairs = 0;
+            moves = 0;
+            score = 0;
+            isProcessing = false;
+            
+            updateStats();
+        }
+
+        // Flip card
+        function flipCard(index) {
+            if (isProcessing || flippedCards.length >= 2) return;
+            
+            const cardElement = document.getElementById(`card-${index}`);
+            const card = cards[index];
+            
+            // Don't flip if already flipped or matched
+            if (cardElement.classList.contains('flipped') || card.matched) return;
+            
+            // Flip the card
+            cardElement.classList.add('flipped');
+            flippedCards.push({ index, card });
+            
+            // Check for match when 2 cards are flipped
+            if (flippedCards.length === 2) {
+                isProcessing = true;
+                moves++;
+                updateStats();
+                
+                setTimeout(() => {
+                    checkMatch();
+                }, 800);
+            }
+        }
+
+        // Check if cards match
+        function checkMatch() {
+            const [first, second] = flippedCards;
+            
+            if (first.card.value === second.card.value && first.card.type !== second.card.type) {
+                // Match found!
+                first.card.matched = true;
+                second.card.matched = true;
+                matchedPairs++;
+                score += 10;
+                
+                // Add success animation
+                const firstElement = document.getElementById(`card-${first.index}`);
+                const secondElement = document.getElementById(`card-${second.index}`);
+                
+                firstElement.parentElement.classList.add('pulse-success');
+                secondElement.parentElement.classList.add('pulse-success');
+                
+                setTimeout(() => {
+                    firstElement.parentElement.classList.remove('pulse-success');
+                    secondElement.parentElement.classList.remove('pulse-success');
+                }, 600);
+                
+                // Check if game is complete
+                if (matchedPairs === 10) {
+                    setTimeout(() => {
+                        showSuccessModal();
+                    }, 1000);
+                }
+            } else {
+                // No match - flip cards back
+                setTimeout(() => {
+                    const firstElement = document.getElementById(`card-${first.index}`);
+                    const secondElement = document.getElementById(`card-${second.index}`);
+                    
+                    firstElement.classList.add('shake');
+                    secondElement.classList.add('shake');
+                    
+                    setTimeout(() => {
+                        firstElement.classList.remove('flipped', 'shake');
+                        secondElement.classList.remove('flipped', 'shake');
+                    }, 500);
+                }, 500);
+            }
+            
+            flippedCards = [];
+            isProcessing = false;
+            updateStats();
+        }
+
+        // Update game statistics
+        function updateStats() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('moves').textContent = moves;
+            document.getElementById('pairs').textContent = `${matchedPairs}/10`;
+        }
+
+        // Show success modal
+        function showSuccessModal() {
+            document.getElementById('finalScore').textContent = score;
+            const modal = document.getElementById('successModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            modal.querySelector('.bg-white').classList.remove('scale-95');
+            modal.querySelector('.bg-white').classList.add('scale-100');
+        }
+
+        // Reset game
+        function resetGame() {
+            // Hide modal if visible
+            const modal = document.getElementById('successModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            modal.querySelector('.bg-white').classList.add('scale-95');
+            modal.querySelector('.bg-white').classList.remove('scale-100');
+            
+            // Reinitialize game
+            initGame();
+        }
+
+        // Start the game when page loads
+        window.addEventListener('load', initGame);
+    </script>
+</body>
+</html>
+<!-- partial -->
+  
+</body>
+</html>
